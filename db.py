@@ -1,4 +1,4 @@
-import pymysql
+import mysql.connector
 import os
 from urllib.parse import urlparse
 
@@ -8,18 +8,17 @@ class Database:
 
     def get_connection(self):
         db_url = os.environ.get("DATABASE_URL")
-
         url = urlparse(db_url)
 
-        connection = pymysql.connect(
+        connection = mysql.connector.connect(
             host=url.hostname,
             user=url.username,
             password=url.password,
-            database=url.path[1:],  
+            database=url.path[1:],  # removes leading /
             port=url.port,
-            cursorclass=pymysql.cursors.DictCursor
         )
-        cursor = connection.cursor()
+
+        cursor = connection.cursor(dictionary=True, buffered=True)
         print("Database Connected Successfully")
         return connection, cursor
     
