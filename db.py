@@ -1,15 +1,23 @@
-import mysql.connector
+import pymysql
+import os
+from urllib.parse import urlparse
 
 class Database:
     def __init__(self,database_name):
         self.database_name = database_name
 
     def get_connection(self):
-        connection = mysql.connector.connect(
-            host = "Localhost",
-            user = "root",
-            password = "Manikandan12",
-            database = self.database_name
+        db_url = os.environ.get("DATABASE_URL")
+
+        url = urlparse(db_url)
+
+        connection = pymysql.connect(
+            host=url.hostname,
+            user=url.username,
+            password=url.password,
+            database=url.path[1:],  # removes leading /
+            port=url.port,
+            cursorclass=pymysql.cursors.DictCursor
         )
         cursor = connection.cursor(buffered=True)
         print("Database Connected Successfully")
