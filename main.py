@@ -1,4 +1,5 @@
 import json
+import os
 import random
 from db import Database
 from datetime import datetime
@@ -6,7 +7,7 @@ from flask import Flask, redirect, render_template, url_for, request, session, j
 
 
 app = Flask(__name__)
-app.secret_key = "123"
+app.secret_key = os.environ.get("SECRET_KEY")
 db = Database("restaurant")
 
 @app.route('/')
