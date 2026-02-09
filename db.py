@@ -18,7 +18,7 @@ class Database:
             port=url.port,
         )
 
-        cursor = connection.cursor(dictionary=True, buffered=True)
+        cursor = connection.cursor(buffered=True)
         print("Database Connected Successfully")
         return connection, cursor
     
