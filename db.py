@@ -15,11 +15,11 @@ class Database:
             host=url.hostname,
             user=url.username,
             password=url.password,
-            database=url.path[1:],  # removes leading /
+            database=url.path[1:],  
             port=url.port,
             cursorclass=pymysql.cursors.DictCursor
         )
-        cursor = connection.cursor(buffered=True)
+        cursor = connection.cursor()
         print("Database Connected Successfully")
         return connection, cursor
     
