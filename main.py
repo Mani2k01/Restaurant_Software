@@ -27,7 +27,7 @@ def table_order():
             "status": "YET TO ORDER"
         }
         session.modified = True
-        query = "update Dine_Tables set table_status = %s, persons = %s where table_id = %s"
+        query = "update dine_tables set table_status = %s, persons = %s where table_id = %s"
         values = ("YET TO ORDER", persons, table_id)
         result = db.update_data(query, values)
         return redirect(url_for('order_entry'))
@@ -104,12 +104,12 @@ def order_entry():
 
         # Save in DB if submitting
         if action == "submit":
-            query = "INSERT INTO food_order (table_id, Name, order_amount, order_items, order_type) VALUES (%s,%s,%s,%s,%s)"
+            query = "INSERT INTO food_order  (table_id, Name, order_amount, order_items, order_type) VALUES (%s,%s,%s,%s,%s)"
             data = (table_id, order_name, order_total, json.dumps(order_data), "TABLE")
             result = db.insert_data(query, data)
             if result:
                 # Update table status
-                db.update_data("UPDATE Dine_Tables SET table_status=%s WHERE table_id=%s", ("OCCUPIED", table_id))
+                db.update_data("UPDATE dine_tables SET table_status=%s WHERE table_id=%s", ("OCCUPIED", table_id))
                 session["current_table"]["status"] = "Occupied"
                 order_id = fetch_order_id(table_id)
                 session["order_id"] = order_id
@@ -122,7 +122,7 @@ def order_entry():
                 return redirect(url_for("order_entry"))
 
             # Mark table cleaning
-            db.update_data("UPDATE Dine_Tables SET table_status='CLEANING', persons=0 WHERE table_id=%s", (table_id,))
+            db.update_data("UPDATE dine_tables SET table_status='CLEANING', persons=0 WHERE table_id=%s", (table_id,))
             # Remove order from session
             orders_by_table.pop(table_id, None)
             session["orders_by_table"] = orders_by_table
@@ -202,13 +202,13 @@ def order_entry():
 
 #             session["order_name"] = order_name
             
-#             query = "insert into food_order (table_id, Name, order_amount, order_items, order_type) values (%s, %s, %s, %s, %s)"
+#             query = "insert into food_order  (table_id, Name, order_amount, order_items, order_type) values (%s, %s, %s, %s, %s)"
 #             data = (table_no, order_name, order_total, order_items_json, "TABLE")
 #             result = db.insert_data(query, data)
 #             if result:
 #                 session["js_alert"] = "Order Placed Successfully"
 #                 order_id=fetch_order_id(table_no)
-#                 query = "update Dine_Tables set table_status = %s where table_id = %s" 
+#                 query = "update dine_tables set table_status = %s where table_id = %s" 
 #                 values = ("OCCUPIED", table_no)
 #                 session["order"]["status"] = "Occupied"
 #                 session["current_order"] = [{"table_id" : table_no, "order_id" : order_id, "order" : order}]
@@ -232,7 +232,7 @@ def order_entry():
 
 
 #             db.update_data(
-#                 "UPDATE Dine_Tables SET table_status='CLEANING', persons= %s WHERE table_id=%s",
+#                 "UPDATE dine_tables SET table_status='CLEANING', persons= %s WHERE table_id=%s",
 #                 (0, table_id)
 #             )
 
@@ -300,7 +300,7 @@ def parcel():
 
             address =  request.form.get("delivery_address")
             parcel_id = random.randint(100, 999)
-            query = "insert into food_order (table_id, Name, order_amount, order_items, order_type, delivery_address) values (%s,%s, %s, %s, %s, %s)"
+            query = "insert into food_order  (table_id, Name, order_amount, order_items, order_type, delivery_address) values (%s,%s, %s, %s, %s, %s)"
             data = (parcel_id, order_name, order_total, order_items_json, order_type, address)
             result = db.insert_data(query, data)
             if result:
@@ -368,7 +368,7 @@ def send_to_distribution():
     item_name = data["item_name"]
 
     # fetch items
-    query = "SELECT order_items FROM food_order WHERE order_id=%s"
+    query = "SELECT order_items FROM food_order  WHERE order_id=%s"
     result = db.fetch_all_data(query, (order_id,))
     items = json.loads(result[0][0])
 
@@ -387,13 +387,13 @@ def send_to_distribution():
 
     if all_done:
         db.update_data(
-            "UPDATE food_order SET order_items=%s, order_status='DISTRIBUTION' WHERE order_id=%s",
+            "UPDATE food_order  SET order_items=%s, order_status='DISTRIBUTION' WHERE order_id=%s",
             (json.dumps(items), order_id)
         )
         print("database updated for the order_status")
     else:
         db.update_data(
-            "UPDATE food_order SET order_items=%s WHERE order_id=%s",
+            "UPDATE food_order  SET order_items=%s WHERE order_id=%s",
             (json.dumps(items), order_id)
         )
 
@@ -406,14 +406,14 @@ def serve_item():
     order_id = data["order_id"]
     item_name = data["item_name"]
 
-    query = "SELECT order_items FROM food_order WHERE order_id=%s"
+    query = "SELECT order_items FROM food_order  WHERE order_id=%s"
     result = db.fetch_all_data(query, (order_id,))
     items = json.loads(result[0][0])
 
     items[item_name]["status"] = "SERVED"
 
     db.update_data(
-        "UPDATE food_order SET order_items=%s WHERE order_id=%s",
+        "UPDATE food_order  SET order_items=%s WHERE order_id=%s",
         (json.dumps(items), order_id)
     )
 
@@ -421,7 +421,7 @@ def serve_item():
     if all(i["status"] == "SERVED" or i["status"] == "CANCELLED"
            for i in items.values()):
         db.update_data(
-            "UPDATE food_order SET order_status='DISTRIBUTED' WHERE order_id=%s",
+            "UPDATE food_order  SET order_status='DISTRIBUTED' WHERE order_id=%s",
             (order_id,)
         )
 
@@ -438,7 +438,7 @@ def cancel_item_api():
     print("order_id ", order_id)
     print("item name", item_name)
 
-    query = "SELECT order_items FROM food_order WHERE order_id=%s"
+    query = "SELECT order_items FROM food_order  WHERE order_id=%s"
     result = db.fetch_all_data(query, (order_id,))
     if not result:
         return jsonify(success=False, msg="Order not found")
@@ -459,7 +459,7 @@ def cancel_item_api():
     )
 
     db.update_data(
-        "UPDATE food_order SET order_items=%s, order_amount=%s WHERE order_id=%s",
+        "UPDATE food_order  SET order_items=%s, order_amount=%s WHERE order_id=%s",
         (json.dumps(items), new_total, order_id)
     )
     print("order removed from db")
@@ -485,7 +485,7 @@ def set_table_available():
     if not table_id:
         return {"success": False, "msg": "Table ID missing"}
 
-    db.update_data("UPDATE Dine_Tables SET table_status='AVAILABLE', persons=0 WHERE table_id=%s", (table_id,))
+    db.update_data("UPDATE dine_tables SET table_status='AVAILABLE', persons=0 WHERE table_id=%s", (table_id,))
 
     current_table = session.get("current_table")
     if current_table and current_table.get("table") == table_id:
@@ -507,13 +507,13 @@ def insert_data(table_count):
     tables = table_count
     print(tables)
     for table_id in range(1, table_count + 1):
-        query = "INSERT INTO Dine_Tables (table_id) VALUES (%s)"
+        query = "INSERT INTO dine_tables (table_id) VALUES (%s)"
         values = (table_id, )
         db.insert_data(query, values)
 
 # insert_data(10)
 def fetch_table_status():
-    query = "Select table_id, table_status, persons from Dine_Tables"
+    query = "Select table_id, table_status, persons from dine_tables"
     result = db.fetch_data_without_value(query)
     tables = []
     for r in result:
@@ -526,7 +526,7 @@ def fetch_table_status():
     return tables
 
 def fetch_orders():
-    query = "select * from food_order where order_status != 'DISTRIBUTED'"
+    query = "select * from food_order  where order_status != 'DISTRIBUTED'"
     result = db.fetch_data_without_value(query)
     orders = []
     for order in result:
@@ -544,7 +544,7 @@ def fetch_orders():
 
 def fetch_order_id(table_id):
     table_no = int(table_id)
-    query = "select order_id from food_order where table_id = %s and order_status != 'DISTRIBUTED' order by order_id desc limit 1 "
+    query = "select order_id from food_order  where table_id = %s and order_status != 'DISTRIBUTED' order by order_id desc limit 1 "
     values = (table_no, )
     result = db.fetch_data(query, values)
     print("order id")
@@ -556,7 +556,7 @@ def fetch_order_id(table_id):
 def can_pay_order(order_id):
     query = """
         SELECT order_status 
-        FROM food_order 
+        FROM food_order  
         WHERE order_id = %s
     """
     result = db.fetch_all_data(query, (order_id,))
